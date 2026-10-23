@@ -9,13 +9,14 @@ import ServiceSelection from "../service_selection/ServiceSelection";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import {COLORS} from "@/components/common/theme";
 import {TYPE} from "@/components/common/typography";
+import DateAndTimeSelection from "@/components/date_and_time_selection/DateAndTimeSelection";
 
 export default function AppointmentBooking() {
     const [step, setStep] = useState(0);
 
     return (
         <Box sx={{
-            width: "fit-content",
+            width: "60vw",
             margin: "3rem auto",
         }}>
             <Box sx={{
@@ -23,7 +24,6 @@ export default function AppointmentBooking() {
                 flexDirection: "column",
                 rowGap: 2,
                 width: "100%",
-                maxWidth: "75vw",
                 height: "80vh",
                 boxSizing: "border-box",
                 border: `1px solid ${COLORS.border.container}`,
@@ -44,12 +44,14 @@ export default function AppointmentBooking() {
                     sx={{
                         display: "flex",
                         flexDirection: "column",
+                        flex: 1,
+                        minHeight: 0,
                         marginTop: 2,
                         width: "100%",
                         minWidth: 0,
                         boxSizing: "border-box",
                         padding: 3,
-                        overflowY: "scroll",
+                        overflowY: "auto",
                         border: `1px solid ${COLORS.border.container}`,
                         borderRadius: 2
                     }}
@@ -57,12 +59,15 @@ export default function AppointmentBooking() {
                     {step === 1 && (
                         <ServiceSelection/>
                     )}
+                    {step === 2 && (
+                        <DateAndTimeSelection/>
+                    )}
                 </Box>
             </Box>
 
             <Box sx={{display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 2}}>
                 <Button
-                    onClick={() => setStep((prev) => Math.max(prev - 1, 1))}
+                    onClick={() => setStep((prev) => Math.max(prev - 1, 0))}
                     startIcon={<ChevronLeftIcon sx={{fontSize: 20}}/>}
                     disableRipple
                     sx={{
