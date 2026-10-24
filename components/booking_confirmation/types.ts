@@ -1,12 +1,11 @@
 export interface UserDetails {
-    name: string;
+    name?: string;
     email: string;
-    phone: string;
 }
 
 export interface BookingSummary {
     branchName: string;
-    branchAddress: string;
+    branchSuburb: string;
     serviceName: string;
     date: string;
     time: string;

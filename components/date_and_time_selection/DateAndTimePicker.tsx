@@ -16,6 +16,8 @@ interface OperatingHour {
 interface DateAndTimePickerProps {
     operatingHours: OperatingHour[];
     onDateTimeChange?: (date: Date | null, time: string | null) => void;
+    initialDate?: Date | null;
+    initialTime?: string | null;
 }
 
 const MONTHS = [
@@ -24,16 +26,19 @@ const MONTHS = [
 ];
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-export default function DateAndTimePicker({ operatingHours, onDateTimeChange }: DateAndTimePickerProps) {
+export default function DateAndTimePicker({ operatingHours, onDateTimeChange, initialDate = null, initialTime = null }: DateAndTimePickerProps) {
     const today = useMemo(() => {
         const d = new Date();
         d.setHours(0, 0, 0, 0);
         return d;
     }, []);
 
-    const [currentMonthDate, setCurrentMonthDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const [selectedTime, setSelectedTime] = useState<string | null>(null);
+    const [currentMonthDate, setCurrentMonthDate] = useState(() => {
+        const visibleDate = initialDate ?? today;
+        return new Date(visibleDate.getFullYear(), visibleDate.getMonth(), 1);
+    });
+    const [selectedDate, setSelectedDate] = useState<Date | null>(initialDate);
+    const [selectedTime, setSelectedTime] = useState<string | null>(initialTime);
 
     const handlePrevMonth = () => {
         setCurrentMonthDate(new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() - 1, 1));

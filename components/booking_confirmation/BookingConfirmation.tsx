@@ -1,13 +1,29 @@
 "use client";
 
 import {Box} from "@mui/material";
-import {useState} from "react";
 import CaptionSubCaption from "@/components/common/CaptionSubCaption";
 import AppointmentDetails from "@/components/booking_confirmation/AppointmentDetails";
-import {MOCK_BOOKING_SUMMARY} from "@/components/booking_confirmation/mockBookingSummary";
+import {formatBookingDate} from "@/components/booking_confirmation/formatBookingDate";
+import {useAuth} from "@/components/auth/AuthContext";
+import type {CompleteBookingSelection} from "@/components/appointment_booking/types";
 
-export default function BookingConfirmation() {
-    const [agreedToNotifications, setAgreedToNotifications] = useState(true);
+export default function BookingConfirmation({selection, onAgreementChange}: {
+    selection: CompleteBookingSelection;
+    onAgreementChange: (agreed: boolean) => void;
+}) {
+    const {session} = useAuth();
+
+    const summary = {
+        branchName: selection.branch.name,
+        branchSuburb: selection.branch.suburb,
+        serviceName: selection.service.title,
+        date: formatBookingDate(selection.date),
+        time: selection.time,
+        userDetails: {
+            name: session?.kind === "guest" ? `${session.firstName} ${session.lastName}` : undefined,
+            email: session?.email ?? "",
+        },
+    };
 
     return (
         <Box sx={{
@@ -22,9 +38,9 @@ export default function BookingConfirmation() {
             />
 
             <AppointmentDetails
-                summary={MOCK_BOOKING_SUMMARY}
-                agreedToNotifications={agreedToNotifications}
-                onAgreementChange={setAgreedToNotifications}
+                summary={summary}
+                agreedToNotifications={selection.agreedToNotifications}
+                onAgreementChange={onAgreementChange}
             />
         </Box>
     );

@@ -1,13 +1,19 @@
 "use client";
 
 import {Box} from "@mui/material";
-import {useState} from "react";
 import CaptionSubCaption from "@/components/common/CaptionSubCaption";
 import BranchSelector from "@/components/branch_selection/BranchSelector";
 import {MOCK_BRANCHES} from "@/components/branch_selection/mockBranches";
+import type {Branch} from "@/components/branch_selection/types";
 
-export default function BranchSelection() {
-    const [branchId, setBranchId] = useState("");
+export default function BranchSelection({selectedBranch, onSelectBranch}: {
+    selectedBranch: Branch | null;
+    onSelectBranch: (branch: Branch) => void;
+}) {
+    const handleBranchChange = (branchId: string) => {
+        const branch = MOCK_BRANCHES.find((candidate) => candidate.id === branchId);
+        if (branch) onSelectBranch(branch);
+    };
 
     return (
         <Box sx={{
@@ -23,8 +29,8 @@ export default function BranchSelection() {
 
             <BranchSelector
                 branches={MOCK_BRANCHES}
-                value={branchId}
-                onChange={setBranchId}
+                value={selectedBranch?.id ?? ""}
+                onChange={handleBranchChange}
             />
         </Box>
     );
