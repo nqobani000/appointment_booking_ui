@@ -11,6 +11,7 @@ import {COLORS} from "@/components/common/theme";
 import {TYPE} from "@/components/common/typography";
 import DateAndTimeSelection from "@/components/date_and_time_selection/DateAndTimeSelection";
 import BranchSelection from "@/components/branch_selection/BranchSelection";
+import BookingConfirmation from "@/components/booking_confirmation/BookingConfirmation";
 
 export default function AppointmentBooking() {
     const [step, setStep] = useState(0);
@@ -66,6 +67,9 @@ export default function AppointmentBooking() {
                     {step === 2 && (
                         <DateAndTimeSelection/>
                     )}
+                    {step === 3 && (
+                        <BookingConfirmation/>
+                    )}
                 </Box>
             </Box>
 
@@ -91,7 +95,7 @@ export default function AppointmentBooking() {
                 <Button
                     variant="contained"
                     disableElevation
-                    onClick={() => setStep((prev) => Math.min(prev + 1, 4))}
+                    onClick={() => setStep((prev) => Math.min(prev + 1, 3))}
                     sx={{
                         backgroundColor: COLORS.brand.button,
                         color: COLORS.text.inverse,
@@ -105,7 +109,7 @@ export default function AppointmentBooking() {
                         },
                     }}
                 >
-                    Next
+                    {step === 3 ? "Confirm Booking" : "Next"}
                 </Button>
             </Box>
         </Box>
