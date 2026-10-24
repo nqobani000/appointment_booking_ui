@@ -10,6 +10,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import {COLORS} from "@/components/common/theme";
 import {TYPE} from "@/components/common/typography";
 import DateAndTimeSelection from "@/components/date_and_time_selection/DateAndTimeSelection";
+import BranchSelection from "@/components/branch_selection/BranchSelection";
 
 export default function AppointmentBooking() {
     const [step, setStep] = useState(0);
@@ -56,6 +57,9 @@ export default function AppointmentBooking() {
                         borderRadius: 2
                     }}
                 >
+                    {step === 0 && (
+                        <BranchSelection/>
+                    )}
                     {step === 1 && (
                         <ServiceSelection/>
                     )}
