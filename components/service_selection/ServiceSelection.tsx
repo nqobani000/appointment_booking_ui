@@ -1,13 +1,20 @@
 "use client";
 
-import {useState} from "react";
 import {Box} from "@mui/material";
 import CaptionSubCaption from "@/components/common/CaptionSubCaption";
-import ServiceOptionGroups from "@/components/service_selection/ServiceOptionGroups";
+import ServiceOptionGroups, {ServiceOption} from "@/components/service_selection/ServiceOptionGroups";
 import {MOCK_GROUPS} from "@/components/service_selection/mockServiceGroups";
 
-export default function ServiceSelection() {
-    const [serviceId, setServiceId] = useState("");
+export default function ServiceSelection({selectedService, onSelectService}: {
+    selectedService: ServiceOption | null;
+    onSelectService: (service: ServiceOption) => void;
+}) {
+    const handleServiceChange = (serviceId: string) => {
+        const service = MOCK_GROUPS
+            .flatMap((group) => group.options)
+            .find((option) => option.id === serviceId);
+        if (service) onSelectService(service);
+    };
 
     return (
         <Box sx={{
@@ -23,8 +30,8 @@ export default function ServiceSelection() {
 
             <ServiceOptionGroups
                 groups={MOCK_GROUPS}
-                value={serviceId}
-                onChange={setServiceId}
+                value={selectedService?.id ?? ""}
+                onChange={handleServiceChange}
             />
         </Box>
     );

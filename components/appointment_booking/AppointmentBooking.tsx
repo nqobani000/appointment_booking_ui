@@ -12,9 +12,45 @@ import {TYPE} from "@/components/common/typography";
 import DateAndTimeSelection from "@/components/date_and_time_selection/DateAndTimeSelection";
 import BranchSelection from "@/components/branch_selection/BranchSelection";
 import BookingConfirmation from "@/components/booking_confirmation/BookingConfirmation";
+import {useAuth} from "@/components/auth/AuthContext";
+import {getDisplayName} from "@/components/auth/session";
+import {createBooking} from "@/api/createBooking";
+import {buildBookingRequest} from "@/components/appointment_booking/buildBookingRequest";
+import {
+    BookingSelection,
+    EMPTY_BOOKING_SELECTION,
+    isBookingComplete,
+    isStepComplete,
+} from "@/components/appointment_booking/types";
+
+const LAST_STEP = 3;
 
 export default function AppointmentBooking() {
+    const {session} = useAuth();
     const [step, setStep] = useState(0);
+    const [selection, setSelection] = useState<BookingSelection>(EMPTY_BOOKING_SELECTION);
+    const [submitting, setSubmitting] = useState(false);
+
+    const updateSelection = (changes: Partial<BookingSelection>) =>
+        setSelection((current) => ({...current, ...changes}));
+
+    const confirmBooking = async () => {
+        if (!session || !isBookingComplete(selection)) return;
+        setSubmitting(true);
+        try {
+            await createBooking(buildBookingRequest(selection, session));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleNext = () => {
+        if (step === LAST_STEP) {
+            void confirmBooking();
+            return;
+        }
+        setStep((current) => current + 1);
+    };
 
     return (
         <Box sx={{
@@ -38,6 +74,11 @@ export default function AppointmentBooking() {
                     <Typography sx={{...TYPE.header, color: COLORS.brand.header}}>
                         Book Branch Appointment
                     </Typography>
+                    {session && (
+                        <Typography sx={{...TYPE.cardDescription, color: COLORS.text.muted, marginLeft: "auto"}}>
+                            {getDisplayName(session)}
+                        </Typography>
+                    )}
                 </Box>
                 <BookingStepper activeStep={step}/>
 
@@ -59,16 +100,28 @@ export default function AppointmentBooking() {
                     }}
                 >
                     {step === 0 && (
-                        <BranchSelection/>
+                        <BranchSelection
+                            selectedBranch={selection.branch}
+                            onSelectBranch={(branch) => updateSelection({branch})}
+                        />
                     )}
                     {step === 1 && (
-                        <ServiceSelection/>
+                        <ServiceSelection
+                            selectedService={selection.service}
+                            onSelectService={(service) => updateSelection({service})}
+                        />
                     )}
                     {step === 2 && (
-                        <DateAndTimeSelection/>
+                        <DateAndTimeSelection
+                            selection={selection}
+                            onSelectDateTime={(date, time) => updateSelection({date, time})}
+                        />
                     )}
-                    {step === 3 && (
-                        <BookingConfirmation/>
+                    {step === LAST_STEP && isBookingComplete(selection) && (
+                        <BookingConfirmation
+                            selection={selection}
+                            onAgreementChange={(agreedToNotifications) => updateSelection({agreedToNotifications})}
+                        />
                     )}
                 </Box>
             </Box>
@@ -95,7 +148,8 @@ export default function AppointmentBooking() {
                 <Button
                     variant="contained"
                     disableElevation
-                    onClick={() => setStep((prev) => Math.min(prev + 1, 3))}
+                    onClick={handleNext}
+                    disabled={!isStepComplete(step, selection) || submitting}
                     sx={{
                         backgroundColor: COLORS.brand.button,
                         color: COLORS.text.inverse,
@@ -107,9 +161,13 @@ export default function AppointmentBooking() {
                         "&:hover": {
                             backgroundColor: COLORS.brand.buttonHover,
                         },
+                        "&.Mui-disabled": {
+                            backgroundColor: COLORS.border.default,
+                            color: COLORS.text.muted,
+                        },
                     }}
                 >
-                    {step === 3 ? "Confirm Booking" : "Next"}
+                    {step === LAST_STEP ? "Confirm Booking" : "Next"}
                 </Button>
             </Box>
         </Box>
