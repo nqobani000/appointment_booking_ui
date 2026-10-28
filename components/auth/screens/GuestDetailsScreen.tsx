@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import {Box} from "@mui/material";
-import {authService} from "@/api/authService";
+import {useRequestGuestCode} from "@/hooks/mutations/useAuthMutations";
+import {getErrorMessage} from "@/api/errors";
 import Field from "@/components/auth/components/Field";
 import FormError from "@/components/auth/components/FormError";
 import PrimaryButton from "@/components/auth/components/PrimaryButton";
@@ -22,8 +23,8 @@ export default function GuestDetailsScreen({
 }) {
     const [values, setValues] = React.useState<Draft>(initial);
     const [touched, setTouched] = React.useState<Partial<Record<keyof Draft, boolean>>>({});
-    const [loading, setLoading] = React.useState(false);
-    const [submitError, setSubmitError] = React.useState<string | null>(null);
+    const requestCode = useRequestGuestCode();
+    const loading = requestCode.isPending;
 
     const errors = validateGuest(values);
     const shown = (key: keyof Draft) => (touched[key] ? errors[key] : undefined);
@@ -34,23 +35,26 @@ export default function GuestDetailsScreen({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setTouched({firstName: true, lastName: true, email: true});
+        setTouched({firstName: true, lastName: true, email: true, phone: true});
         if (Object.keys(errors).length > 0) return;
 
         const clean: Draft = {
             firstName: values.firstName.trim(),
             lastName: values.lastName.trim(),
             email: values.email.trim(),
+            phone: values.phone.trim(),
         };
 
-        setLoading(true);
-        setSubmitError(null);
         try {
-            await authService.sendVerificationCode(clean.email);
+            await requestCode.mutateAsync({
+                name: clean.firstName,
+                surname: clean.lastName,
+                email: clean.email,
+                phone: clean.phone,
+            });
             onCodeSent(clean);
         } catch {
-            setSubmitError("We couldn't send your code. Please try again.");
-            setLoading(false);
+            // surfaced through requestCode.error
         }
     };
 
@@ -104,7 +108,18 @@ export default function GuestDetailsScreen({
                     error={shown("email")}
                     disabled={loading}
                 />
-                {submitError && <FormError>{submitError}</FormError>}
+                <Field
+                    id="guest-phone"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="Phone number *"
+                    value={values.phone}
+                    onChange={setField("phone")}
+                    onBlur={touch("phone")}
+                    error={shown("phone")}
+                    disabled={loading}
+                />
+                {requestCode.error && <FormError>{getErrorMessage(requestCode.error)}</FormError>}
                 <PrimaryButton type="submit" loading={loading} loadingLabel="Sending code…">
                     Send verification code
                 </PrimaryButton>

@@ -2,11 +2,9 @@
 
 import * as React from "react";
 import {Box, Button, Typography} from "@mui/material";
-import Image from "next/image";
-import logo from "@/assets/images/logo.png";
+import BrandHeader from "@/components/auth/components/BrandHeader";
 import {CENTERED_MIN_HEIGHT} from "@/components/auth/constants";
 import {COLORS} from "@/components/common/theme";
-import {TYPE} from "@/components/common/typography";
 
 export default function ScreenShell({
                                         title,
@@ -34,12 +32,7 @@ export default function ScreenShell({
 
     const content = (
         <>
-            <Box sx={{position: "fixed", top: 16, left: 24, display: "flex", alignItems: "center", columnGap: 2}}>
-                <Image alt="Logo" src={logo} width={70} height={70} priority/>
-                <Typography sx={{...TYPE.header, color: COLORS.brand.header}}>
-                    Book Branch Appointment
-                </Typography>
-            </Box>
+            <BrandHeader/>
             <Box
                 sx={{
                     width: "100%",

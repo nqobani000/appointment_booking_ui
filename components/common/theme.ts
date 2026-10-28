@@ -21,6 +21,7 @@ export const COLORS = {
     },
     surface: {
         base: "#fff",
+        subtle: "#F6F9FD",
         selected: "#EAF3FC",
     },
     radio: {

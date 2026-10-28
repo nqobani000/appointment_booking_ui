@@ -2,27 +2,33 @@
 
 import * as React from "react";
 import {Box, Button, Typography} from "@mui/material";
-import {authService, MOCK_VERIFICATION_CODE} from "@/api/authService";
+import {useRequestGuestCode, useVerifyGuestCode} from "@/hooks/mutations/useAuthMutations";
+import {getErrorMessage} from "@/api/errors";
+import type {AuthTokenResponse} from "@/api/types/auth";
+import type {Draft} from "@/components/auth/types";
 import CodeInput from "@/components/auth/components/CodeInput";
 import FormError from "@/components/auth/components/FormError";
 import PrimaryButton from "@/components/auth/components/PrimaryButton";
 import ScreenShell from "@/components/auth/components/ScreenShell";
-import {CODE_LENGTH, RESEND_SECONDS, SHOW_DEMO_HINT} from "@/components/auth/constants";
+import {CODE_LENGTH, RESEND_SECONDS} from "@/components/auth/constants";
 import {formatTime, useCountdown} from "@/components/auth/hooks/useCountdown";
 import {COLORS} from "@/components/common/theme";
 
 export default function VerifyScreen({
-                                         email,
+                                         draft,
                                          onBack,
                                          onVerified,
                                      }: {
-    email: string;
+    draft: Draft;
     onBack: () => void;
-    onVerified: () => void;
+    onVerified: (token: AuthTokenResponse) => void;
 }) {
+    const email = draft.email;
+    const verifyCode = useVerifyGuestCode();
+    const requestCode = useRequestGuestCode();
     const [digits, setDigits] = React.useState<string[]>(Array(CODE_LENGTH).fill(""));
-    const [verifying, setVerifying] = React.useState(false);
-    const [resending, setResending] = React.useState(false);
+    const verifying = verifyCode.isPending;
+    const resending = requestCode.isPending;
     const [error, setError] = React.useState<string | null>(null);
     const [notice, setNotice] = React.useState<string | null>(null);
     const [secondsLeft, restartCountdown] = useCountdown(RESEND_SECONDS);
@@ -49,35 +55,31 @@ export default function VerifyScreen({
     const handleVerify = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!complete) return;
-        setVerifying(true);
         setError(null);
         try {
-            const result = await authService.verifyCode(email, code);
-            if (result.ok) {
-                onVerified();
-                return;
-            }
-            setError(result.message);
+            onVerified(await verifyCode.mutateAsync({email, code}));
+        } catch (err) {
+            setError(getErrorMessage(err));
             resetCode();
-        } catch {
-            setError("Something went wrong while verifying your code. Please try again.");
         }
-        setVerifying(false);
     };
 
     const handleResend = async () => {
-        setResending(true);
         setError(null);
         setNotice(null);
         try {
-            await authService.sendVerificationCode(email);
+            await requestCode.mutateAsync({
+                name: draft.firstName,
+                surname: draft.lastName,
+                email,
+                phone: draft.phone,
+            });
             restartCountdown();
             resetCode();
             setNotice("A new code has been sent to your email.");
-        } catch {
-            setError("We couldn't send a new code. Please try again.");
+        } catch (err) {
+            setError(getErrorMessage(err));
         }
-        setResending(false);
     };
 
     const canResend = secondsLeft <= 0 && !resending && !verifying;
@@ -161,11 +163,6 @@ export default function VerifyScreen({
                     )}
                 </Box>
 
-                {SHOW_DEMO_HINT && (
-                    <Typography sx={{fontSize: 12, textAlign: "center", color: COLORS.text.subCaption}}>
-                        Demo only: use code {MOCK_VERIFICATION_CODE}
-                    </Typography>
-                )}
 
                 <PrimaryButton
                     type="submit"

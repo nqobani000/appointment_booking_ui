@@ -5,7 +5,7 @@ export interface UserDetails {
 
 export interface BookingSummary {
     branchName: string;
-    branchSuburb: string;
+    branchAddress: string;
     serviceName: string;
     date: string;
     time: string;

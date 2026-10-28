@@ -48,23 +48,24 @@ export default function BranchCard({ branch, selected }: { branch: Branch; selec
                 <Typography sx={{ ...TYPE.cardTitle, color: COLORS.text.primary }}>
                     {branch.name}
                 </Typography>
-                <Typography sx={{ ...TYPE.cardDescription, color: COLORS.text.subCaption }}>
-                    {branch.suburb}
-                </Typography>
-                <Typography sx={{ fontSize: 12, color: COLORS.text.subCaption }}>
-                    {branch.hours}
-                </Typography>
+                {branch.address && (
+                    <Typography sx={{ ...TYPE.cardDescription, color: COLORS.text.subCaption }}>
+                        {branch.address}
+                    </Typography>
+                )}
             </Box>
-            <Typography
-                sx={{
-                    flexShrink: 0,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: COLORS.text.primary,
-                }}
-            >
-                {branch.distanceKm} km away
-            </Typography>
+            {branch.distanceKm !== undefined && (
+                <Typography
+                    sx={{
+                        flexShrink: 0,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: COLORS.text.primary,
+                    }}
+                >
+                    {branch.distanceKm.toFixed(1)} km away
+                </Typography>
+            )}
 
             <Radio
                 value={branch.id}
