@@ -1,6 +1,6 @@
 import {describe, expect, it} from "vitest";
 import {toStartAt, formatCountdown} from "@/lib/datetime";
-import {toServiceGroups} from "@/components/service_selection/toServiceGroups";
+import {filterByCustomerType, toServiceGroups} from "@/components/service_selection/toServiceGroups";
 import {toBranch} from "@/components/branch_selection/types";
 import {shouldRetryQuery} from "@/lib/queryClient";
 import {ApiError} from "@/api/errors";
@@ -21,6 +21,20 @@ describe("helpers", () => {
         expect(groups).toEqual([
             {id: "LOANS", title: "Loans", options: [{id: "1", title: "Home", description: "d", availableTo: ["CLIENT"]}]},
         ]);
+    });
+
+    it("filters groups to the services a customer type may book and drops empty groups", () => {
+        const groups = toServiceGroups({
+            LOANS: [{id: "1", code: "H", name: "Home", description: "d", category: "LOANS", availableTo: ["CLIENT"]}],
+            ACCOUNTS: [
+                {id: "2", code: "O", name: "Open", description: "d", category: "ACCOUNTS", availableTo: ["CLIENT", "GUEST"]},
+                {id: "3", code: "C", name: "Close", description: "d", category: "ACCOUNTS", availableTo: ["CLIENT"]},
+            ],
+        });
+        expect(filterByCustomerType(groups, "GUEST").map((g) => [g.id, g.options.map((o) => o.id)]))
+            .toEqual([["ACCOUNTS", ["2"]]]);
+        expect(filterByCustomerType(groups, "CLIENT").map((g) => g.options.length)).toEqual([1, 2]);
+        expect(filterByCustomerType([], "GUEST")).toEqual([]);
     });
 
     it("uses backend distance and does not compute one", () => {

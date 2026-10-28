@@ -48,6 +48,11 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - The reservation is cleared on release, expiry (`410`), confirmation, a `409` on confirm, start-over and sign-out.
 - **Trade-off:** `sessionStorage` is readable by any script on the page (e.g. via XSS). A server-managed HttpOnly session is the safer long-term option.
 
+### Service selection
+- "What can we help you with?" defaults to **Available to me**: services the signed-in customer type (`CLIENT` or `GUEST`) may book. The pill at the right of the title switches to **All services**.
+- The backend only filters services by search text, so the available view requests the whole catalogue in one call (`size=100`, the backend's maximum page size), filters by `availableTo` in the browser and shows no pager. A branch with more than 100 services would be truncated in that view. The All services view uses the normal server pagination (20 per page).
+- In the All services view, choosing a service the customer cannot book shows an inline message instead of selecting it.
+
 ### Index screen and booking lookup
 - Unauthenticated users land on `components/auth/screens/IndexScreen.tsx` (rendered by `AuthGate`): look up a booking by reference, or start the Client or Guest flow.
 - A lookup needs no sign-in. It validates the reference (`lib/bookingReference.ts`), calls `api/appointments.ts` and navigates to the public route `/bookings/[referenceNo]` (`components/booking_lookup/`), which sits outside `AuthGate`. That route is `noindex` and sends no referrer because the reference acts as the credential.
