@@ -2,12 +2,13 @@ import { Button } from "@mui/material";
 import MyLocationRoundedIcon from "@mui/icons-material/MyLocationRounded";
 import { COLORS } from "@/components/common/theme";
 
-export default function UseLocationButton({ onClick }: { onClick?: () => void }) {
+export default function UseLocationButton({ onClick, loading = false }: { onClick?: () => void; loading?: boolean }) {
     return (
         <Button
             variant="text"
             disableRipple
             onClick={onClick}
+            disabled={loading}
             startIcon={<MyLocationRoundedIcon sx={{ fontSize: 18 }} />}
             sx={{
                 alignSelf: "flex-start",
@@ -22,7 +23,7 @@ export default function UseLocationButton({ onClick }: { onClick?: () => void })
                 "&:hover": { backgroundColor: COLORS.brand.linkHoverBg },
             }}
         >
-            Use my current location
+            {loading ? "Finding your location…" : "Use my current location"}
         </Button>
     );
 }

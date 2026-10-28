@@ -1,4 +1,5 @@
 import {Box, OutlinedInput, Typography} from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {ERROR_COLOR} from "@/components/auth/constants";
 import {COLORS} from "@/components/common/theme";
 
@@ -28,6 +29,8 @@ export default function Field({
                                   type = "text",
                                   autoComplete,
                                   disabled,
+                                  hint,
+                                  showRequiredMark = true,
                               }: {
     id: string;
     label?: string;
@@ -39,7 +42,11 @@ export default function Field({
     type?: string;
     autoComplete?: string;
     disabled?: boolean;
+    /** Supporting text shown under the input (and under any error), with an info icon. */
+    hint?: string;
+    showRequiredMark?: boolean;
 }) {
+    const describedBy = [error && `${id}-error`, hint && `${id}-hint`].filter(Boolean).join(" ") || undefined;
     return (
         <Box>
             {label && (
@@ -54,7 +61,7 @@ export default function Field({
                         color: COLORS.text.primary,
                     }}
                 >
-                    {label} <span aria-hidden="true">*</span>
+                    {label} {showRequiredMark && <span aria-hidden="true">*</span>}
                 </Typography>
             )}
             <OutlinedInput
@@ -71,7 +78,7 @@ export default function Field({
                 inputProps={{
                     "aria-label": label ? undefined : placeholder?.replace(/\s*\*$/, ""),
                     "aria-invalid": !!error,
-                    "aria-describedby": error ? `${id}-error` : undefined,
+                    "aria-describedby": describedBy,
                 }}
                 sx={inputSx(!!error)}
             />
@@ -83,6 +90,14 @@ export default function Field({
                 >
                     {error}
                 </Typography>
+            )}
+            {hint && (
+                <Box sx={{mt: 1.5, display: "flex", alignItems: "center", gap: 1, color: COLORS.text.subCaption}}>
+                    <InfoOutlinedIcon aria-hidden fontSize="small"/>
+                    <Typography id={`${id}-hint`} sx={{fontSize: 13, lineHeight: 1.4}}>
+                        {hint}
+                    </Typography>
+                </Box>
             )}
         </Box>
     );

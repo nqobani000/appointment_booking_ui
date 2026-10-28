@@ -3,42 +3,38 @@
 import * as React from "react";
 import {AuthProvider, useAuth} from "@/components/auth/AuthContext";
 import AllSetScreen from "@/components/auth/screens/AllSetScreen";
-import ChooseScreen from "@/components/auth/screens/ChooseScreen";
-import ClientEmailScreen from "@/components/auth/screens/ClientEmailScreen";
+import ClientLoginScreen from "@/components/auth/screens/ClientLoginScreen";
 import GuestDetailsScreen from "@/components/auth/screens/GuestDetailsScreen";
+import IndexScreen from "@/components/auth/screens/IndexScreen";
 import VerifyScreen from "@/components/auth/screens/VerifyScreen";
 import type {Draft, Step} from "@/components/auth/types";
+import {toSession} from "@/components/auth/session";
 
-const EMPTY_DRAFT: Draft = {firstName: "", lastName: "", email: ""};
+const EMPTY_DRAFT: Draft = {firstName: "", lastName: "", email: "", phone: ""};
 
 function GateContent({children}: { children: React.ReactNode }) {
-    const {session, ready, signIn} = useAuth();
+    const {session, signIn} = useAuth();
     const [step, setStep] = React.useState<Step>({name: "choose"});
     const [draft, setDraft] = React.useState<Draft>(EMPTY_DRAFT);
     const [started, setStarted] = React.useState(false);
 
-    if (!ready) return null;
     if (session && started) return <>{children}</>;
     if (session) return <AllSetScreen onStart={() => setStarted(true)}/>;
 
     switch (step.name) {
         case "choose":
             return (
-                <ChooseScreen
-                    onClient={() => setStep({name: "client-email"})}
+                <IndexScreen
+                    onClient={() => setStep({name: "client-login"})}
                     onGuest={() => setStep({name: "guest-details"})}
                 />
             );
 
-        case "client-email":
+        case "client-login":
             return (
-                <ClientEmailScreen
-                    initialEmail={draft.email}
+                <ClientLoginScreen
                     onBack={() => setStep({name: "choose"})}
-                    onCodeSent={(email) => {
-                        setDraft((d) => ({...d, email}));
-                        setStep({name: "verify", flow: "client"});
-                    }}
+                    onLoggedIn={(token, email) => signIn(toSession(token, {email}))}
                 />
             );
 
@@ -49,7 +45,7 @@ function GateContent({children}: { children: React.ReactNode }) {
                     onBack={() => setStep({name: "choose"})}
                     onCodeSent={(values) => {
                         setDraft(values);
-                        setStep({name: "verify", flow: "guest"});
+                        setStep({name: "verify"});
                     }}
                 />
             );
@@ -57,21 +53,10 @@ function GateContent({children}: { children: React.ReactNode }) {
         case "verify":
             return (
                 <VerifyScreen
-                    email={draft.email}
-                    onBack={() =>
-                        setStep(step.flow === "guest" ? {name: "guest-details"} : {name: "client-email"})
-                    }
-                    onVerified={() =>
-                        signIn(
-                            step.flow === "guest"
-                                ? {
-                                    kind: "guest",
-                                    email: draft.email,
-                                    firstName: draft.firstName,
-                                    lastName: draft.lastName,
-                                }
-                                : {kind: "client", email: draft.email}
-                        )
+                    draft={draft}
+                    onBack={() => setStep({name: "guest-details"})}
+                    onVerified={(token) =>
+                        signIn(toSession(token, {email: draft.email, firstName: draft.firstName, lastName: draft.lastName}))
                     }
                 />
             );

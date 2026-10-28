@@ -58,7 +58,7 @@ export default function AppointmentDetails({
     agreedToNotifications: boolean;
     onAgreementChange: (agreed: boolean) => void;
 }) {
-    const {branchName, branchSuburb, serviceName, date, time, userDetails} = summary;
+    const {branchName, branchAddress, serviceName, date, time, userDetails} = summary;
 
     return (
         <Box sx={{display: "flex", flexDirection: "column", gap: 2, width: "100%"}}>
@@ -71,7 +71,7 @@ export default function AppointmentDetails({
             }}>
                 <DetailRow label="Branch">
                     <Primary>{branchName}</Primary>
-                    <Secondary>{branchSuburb}</Secondary>
+                    {branchAddress && <Secondary>{branchAddress}</Secondary>}
                 </DetailRow>
 
                 <DetailRow label="Service">
