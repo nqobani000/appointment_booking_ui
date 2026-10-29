@@ -46,6 +46,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - They are never put in `localStorage`, URLs, query keys or the TanStack Query cache; the reservation token is only sent as `X-Reservation-Token`.
 - After a reload with a held reservation, the flow resumes at the review step.
 - The reservation is cleared on release, expiry (`410`), confirmation, a `409` on confirm, start-over and sign-out.
+- **Logging out:** the **Log out** button (booking header and the "You're all set" screen) calls `AuthContext.signOut`, which discards the JWT and reservation token from `sessionStorage` and clears the query cache. `AuthGate` is remounted on sign-in/out, so the login step and the guest details draft are reset too (also on `401` and token expiry). If a slot is on hold, the user is asked to confirm first; the hold is then released in the background (best effort, it expires on its own otherwise) before the token is discarded.
+- **Limitation:** logout is client-side only. The backend has no logout/revocation endpoint, so a copied JWT stays valid until its `expiresAt`.
 - **Trade-off:** `sessionStorage` is readable by any script on the page (e.g. via XSS). A server-managed HttpOnly session is the safer long-term option.
 
 ### Service selection

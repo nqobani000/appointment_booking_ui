@@ -4,7 +4,7 @@ import logo from "@/assets/images/logo.png";
 import Image from "next/image";
 import {Alert, Box, Button, Typography} from "@mui/material";
 import BookingStepper from "@/components/booking_stepper/BookingStepper";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import ServiceSelection from "../service_selection/ServiceSelection";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import {COLORS} from "@/components/common/theme";
@@ -13,6 +13,7 @@ import DateAndTimeSelection from "@/components/date_and_time_selection/DateAndTi
 import BranchSelection from "@/components/branch_selection/BranchSelection";
 import BookingConfirmation from "@/components/booking_confirmation/BookingConfirmation";
 import {useAuth} from "@/components/auth/AuthContext";
+import LogoutButton from "@/components/auth/LogoutButton";
 import {getDisplayName} from "@/components/auth/session";
 import AppointmentConfirmed from "@/components/booking_confirmation/AppointmentConfirmed";
 import {ReservationSessionProvider, useReservationSession} from "@/components/appointment_booking/ReservationSession";
@@ -93,18 +94,24 @@ function BookingFlow() {
         return () => clearTimeout(timer);
     }, [expiresAt, clearReservation]);
 
-    // Best-effort release when the tab is closed or hidden mid-booking; backend expiry is the fallback.
+    // Best-effort release (keepalive survives a tab close or the sign-out that follows); backend expiry is the fallback.
     const accessToken = session?.accessToken;
-    useEffect(() => {
-        const onPageHide = () => {
-            const token = getReservationToken();
-                        if (token && accessToken && reservation) {
-                void releaseReservation(reservation.reservationId, {accessToken, reservationToken: token}, {keepalive: true}).catch(() => undefined);
-            }
-        };
-        window.addEventListener("pagehide", onPageHide);
-        return () => window.removeEventListener("pagehide", onPageHide);
+    const releaseInBackground = useCallback(() => {
+        const token = getReservationToken();
+        if (token && accessToken && reservation) {
+            void releaseReservation(reservation.reservationId, {accessToken, reservationToken: token}, {keepalive: true}).catch(() => undefined);
+        }
     }, [reservation, accessToken, getReservationToken]);
+
+    useEffect(() => {
+        window.addEventListener("pagehide", releaseInBackground);
+        return () => window.removeEventListener("pagehide", releaseInBackground);
+    }, [releaseInBackground]);
+
+    const logOut = () => {
+        releaseInBackground();
+        signOut();
+    };
 
     const reserveSlot = () => {
         if (!isBookingComplete(selection)) return;
@@ -187,9 +194,20 @@ function BookingFlow() {
                         Book Branch Appointment
                     </Typography>
                     {session && (
-                        <Typography sx={{...TYPE.cardDescription, color: COLORS.text.muted, marginLeft: "auto"}}>
-                            {getDisplayName(session)}
-                        </Typography>
+                        <Box sx={{display: "flex", alignItems: "center", columnGap: 1, marginLeft: "auto"}}>
+                            <Typography sx={{...TYPE.cardDescription, color: COLORS.text.muted}}>
+                                {getDisplayName(session)}
+                            </Typography>
+                            <LogoutButton
+                                onLogout={logOut}
+                                disabled={busy}
+                                confirm={reservation ? {
+                                    title: "Log out?",
+                                    message: "You'll lose your held time slot. We'll release it and log you out.",
+                                    confirmLabel: "Release and log out",
+                                } : undefined}
+                            />
+                        </Box>
                     )}
                 </Box>
                 <BookingStepper activeStep={step}/>

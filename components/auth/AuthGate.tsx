@@ -13,13 +13,13 @@ import {toSession} from "@/components/auth/session";
 const EMPTY_DRAFT: Draft = {firstName: "", lastName: "", email: "", phone: ""};
 
 function GateContent({children}: { children: React.ReactNode }) {
-    const {session, signIn} = useAuth();
+    const {session, signIn, signOut} = useAuth();
     const [step, setStep] = React.useState<Step>({name: "choose"});
     const [draft, setDraft] = React.useState<Draft>(EMPTY_DRAFT);
     const [started, setStarted] = React.useState(false);
 
     if (session && started) return <>{children}</>;
-    if (session) return <AllSetScreen onStart={() => setStarted(true)}/>;
+    if (session) return <AllSetScreen onStart={() => setStarted(true)} onSignOut={signOut}/>;
 
     switch (step.name) {
         case "choose":
@@ -63,10 +63,16 @@ function GateContent({children}: { children: React.ReactNode }) {
     }
 }
 
+/** Remounting on sign-in/out resets the step, the guest draft and `started` (logout, 401 and expiry alike). */
+function Gate({children}: { children: React.ReactNode }) {
+    const {session} = useAuth();
+    return <GateContent key={session ? "signed-in" : "signed-out"}>{children}</GateContent>;
+}
+
 export default function AuthGate({children}: { children: React.ReactNode }) {
     return (
         <AuthProvider>
-            <GateContent>{children}</GateContent>
+            <Gate>{children}</Gate>
         </AuthProvider>
     );
 }
